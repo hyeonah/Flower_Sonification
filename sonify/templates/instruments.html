@@ -1,0 +1,132 @@
+{% extends 'base.html' %}
+
+{% block title %} Guest Book {% endblock %}
+
+<head>
+    <script type="text/javascript" src="Tonejs-Instruments.js"></script>
+    <script type="text/javascript" src="external-js/nprogress.js"></script>
+</head>
+
+{% block css %}
+<!-- Bootstrap theme-->
+<link href="{{ url_for('static', filename='css/Bootstrap-theme.min.css')}}" rel="stylesheet">
+<!-- Custom styles for this template -->
+<link href="{{ url_for('static', filename='css/theme.css')}}" rel="stylesheet">
+{% endblock %}
+
+{% block body %}
+<div class="container theme-showcase" role="main">    
+    
+    <div class="page-header" >
+        <script>
+
+            let params = {
+                volume:1,
+                freq:440.0,
+                gain:1,
+                play:false,
+                eeg : 1,
+            };
+            
+
+            var socket = io.connect('http://'+document.domain + ':' + location.port);
+            
+
+            socket.on('connect', function(data){
+                console.log('Websocket connected!');
+                /*
+                if(params.connected){
+                }
+                else{
+                    params.connected = true;
+                    socket.emit('init_process')
+                }
+                */
+                console.log("eeg data:", data);
+                params.eeg = data;
+                
+            });
+
+            //TODO : oscInit() function that initializes an oscillator
+            //TODO : oscUpdate() function that updates the frequency and volume of the oscillator
+            ///////  oscillator.frequency.value = params.freq + params.gain * EEG;
+            ///////  oscillator.volume.value = params.volume
+            //TODO : play(V) function that starts or stops oscillators
+
+        
+            var gui = new dat.GUI();
+
+            gui.add(params, 'volume').min(-50).max(50).step(0.1).onChange((value)=>{
+                if(params.play){
+                    oscUpdate()
+                    play()
+                }
+            });
+            gui.add(params, 'freq').min(-100).max(1000).onChange((value)=>{
+                if(params.play){
+                    oscUpdate()
+                    play()
+                }
+            });
+            gui.add(params, 'gain', 100, 3000).onChange((value)=>{
+                if(params.play){
+                    oscUpdate()
+                    play()
+                }
+            });
+            gui.add(params, 'play').onChange(function(value){
+                if(value){
+                    oscInit()
+                    oscUpdate()
+                    play()
+                }
+                else{
+                    stop()
+                }
+            });
+
+            
+
+            function oscInit(){
+                params.oscs = []
+                for(let i=0 ; i<16; i++){
+                    params.oscs.push(new Tone.Oscillator(440, "triangle10").toMaster());
+                }
+                
+            }
+
+            function oscUpdate(){
+                params.oscs.forEach((o,i)=>{
+                    let eeg = Math.round(params.eeg);
+                    //o.freq = params.freq + params.gain * params.eeg[i]; //why it is not working?
+                    o.frequency.rampTo(params.freq + params.gain, 0.001);
+                    o.volume.value = params.volume;
+                    
+
+
+                    //console.log("eeg:", params.eeg[i]);
+                    //console.log("eeg.gain:", params.gain);
+                    //console.log("param.freq : ", params.freq);
+                })
+            }
+            
+            
+            function play(){
+                params.oscs.forEach((o,i)=>{
+                    o.start()
+                })
+            }
+            
+
+            function stop(){
+                params.oscs.forEach((o,i)=>{
+                    o.dispose();
+                })
+            }
+    
+        </script>
+    </div>
+</div> <!-- /container -->
+{% endblock %}
+
+

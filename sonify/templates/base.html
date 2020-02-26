@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang ="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="description" content="">
+        <meta name="author" content="">
+        
+
+
+        <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+        <meta name="N.P. Brosowsky" content="Tone.js instrument library loader" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+        <!-- socketio -->
+        <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/1.3.6/socket.io.min.js"></script>
+
+        <!--Tone.js-->
+        <script src="https://unpkg.com/@webcomponents/webcomponentsjs@^2/webcomponents-bundle.js"></script>
+        <script src="https://unpkg.com/tone"></script>
+        <script src="https://unpkg.com/@tonejs/ui"></script>
+
+        <!--Instrument.js-->
+        <!--<script type="text/javascript" src="Tonejs-Instruments.js"></script>-->
+        <!--<script type="text/javascript" src="external-js/nprogress.js"></script>-->
+
+        <!-- GUI -->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.7.6/dat.gui.js"></script>
+        <!--<script type="text/javascript" src="dat.gui.min.js"></script>-->
+
+        <title>{% block title %}{% endblock %}</title>
+
+        <!--Bootstrap core CSS-->
+        <!--<link href="{{ url_for('static', filename='css/Bootstrap.min.css')}}" rel="stylesheet">-->
+        {% block css %}{% endblock %}
+ 
+
+    </head>
+
+    <body>
+        {% block body %}{% endblock %}
+    </body>
+</html>
+
