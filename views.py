@@ -16,7 +16,8 @@ data = {}
 data['connected'] = False
 data['processed'] = False
 
-class NumpyEncoder(json.JSONDecoder):
+class NumpyEncoder(json.JSONEncoder):
+    """ JSON Encoder for Numpy ndarrays """
     def default(self, obj):
         if isinstance(obj, (np.int_, np.intc, np.intp, np.int8,
             np.int16, np.int32, np.int64, np.uint8,
@@ -86,11 +87,14 @@ def connect():
     if not data['connected'] :
         data['connected'] = True
 
+        socketio.sleep(0)
+        
         data['signal_raw'] = np.load('/Users/hyeonah/Documents/dev/sonify/sample.npy').tolist()
         data['out'] = {
+            'raw' : data['signal_raw'],\
             'full_size':len(data['signal_raw'][0])}
 
-        print('init =', data['out'])
+        #print('init =', data['out'])
         data['out'] = jsonify(data['out'])
         emit('connect', data['out'])
 

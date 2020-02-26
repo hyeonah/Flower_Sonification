@@ -43,9 +43,15 @@
                 }
                 */
                 console.log("eeg data:", data);
-                params.eeg = data;
+                //params.eeg = data;
+                //console.log("raw data:", params.eeg);
+                if(data){
+                    params.eeg = data['raw'];
+                    console.log("raw data:", params.eeg);
+                }
                 
             });
+            //console.log("raw data:", params.eeg);
 
             //TODO : oscInit() function that initializes an oscillator
             //TODO : oscUpdate() function that updates the frequency and volume of the oscillator
@@ -88,6 +94,7 @@
             
 
             function oscInit(){
+                //var reverb = new Tone.Reverb(3.8).toMaster();
                 params.oscs = []
                 for(let i=0 ; i<16; i++){
                     params.oscs.push(new Tone.Oscillator(440, "triangle10").toMaster());
@@ -97,9 +104,9 @@
 
             function oscUpdate(){
                 params.oscs.forEach((o,i)=>{
-                    let eeg = Math.round(params.eeg);
+                    let eeg = Math.round(params.eeg[1][i]);
                     //o.freq = params.freq + params.gain * params.eeg[i]; //why it is not working?
-                    o.frequency.rampTo(params.freq + params.gain, 0.001);
+                    o.frequency.rampTo(params.freq + params.gain + eeg, 0.001);
                     o.volume.value = params.volume;
                     
 
