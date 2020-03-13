@@ -39,7 +39,7 @@ ALLOWED_EXTENSIONS = {'npy'}
 main = Flask(__name__)
 main.config['EEG_UPLOAD_FOLDER'] = EEG_UPLOAD_FOLDER
 main.secret_key = 'blabla'
-socketio = SocketIO(main,pingInterval = 10000, pingTimeout= 5000)
+socketio = SocketIO(main, pingInterval = 10000, pingTimeout= 50000)
 
 
 @main.route('/')
@@ -59,7 +59,7 @@ def instruments():
     #print(data)
     return render_template('instruments.html')
 
-
+"""
 @main.route('/upload', methods =['GET', 'POST'])
 def upload_file():
     global data
@@ -75,11 +75,12 @@ def upload_file():
             return redirect(request.url)
         if file and allowed_file(file.filename):
             print('upload successful, flle_name: ', file.filename)
-            data['eeg_file_path'] = os.path.join(app.config['EEG_UPLOAD_FOLDER'], file.filename)
+            data['eeg_file_path'] = os.path.join(app.confi
+            g['EEG_UPLOAD_FOLDER'], file.filename)
             file.save(data['eeg_file_path'])
             return render_template('select.html')
     return render_template('index.html')
-
+"""
 
 @socketio.on('connect')
 def connect():
@@ -88,8 +89,9 @@ def connect():
         data['connected'] = True
 
         socketio.sleep(0)
-        
-        data['signal_raw'] = np.load('/Users/hyeonah/Documents/dev/sonify/sample.npy').tolist()
+        npdata = np.load('/Users/hyeonah/Documents/dev/sonify/sample.npy')[:,:100]
+        print(npdata.shape)
+        data['signal_raw'] = npdata.tolist()
         data['out'] = {
             'raw' : data['signal_raw'],\
             'full_size':len(data['signal_raw'][0])}

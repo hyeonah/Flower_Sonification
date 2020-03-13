@@ -15,7 +15,7 @@
 {% endblock %}
 
 {% block body %}
-<div class="container theme-showcase" role="main">    
+<div class="container theme-showcase" role="main">
     
     <div class="page-header" >
         <script>
@@ -26,10 +26,16 @@
                 gain:1,
                 play:false,
                 eeg : 1,
+                tempo : 80,
+                all : false,
+                type : null,
+                channel : null,
             };
             
 
             var socket = io.connect('http://'+document.domain + ':' + location.port);
+            const notes = Array(100).fill(null).map(()=>Array());
+            var note, timer;
             
 
             socket.on('connect', function(data){
@@ -51,7 +57,6 @@
                 }
                 
             });
-            //console.log("raw data:", params.eeg);
 
             //TODO : oscInit() function that initializes an oscillator
             //TODO : oscUpdate() function that updates the frequency and volume of the oscillator
@@ -64,23 +69,54 @@
 
             gui.add(params, 'volume').min(-50).max(50).step(0.1).onChange((value)=>{
                 if(params.play){
+                    //sonify()
                     oscUpdate()
                     play()
                 }
             });
             gui.add(params, 'freq').min(-100).max(1000).onChange((value)=>{
                 if(params.play){
+                    //sonify()
                     oscUpdate()
                     play()
                 }
             });
-            gui.add(params, 'gain', 100, 3000).onChange((value)=>{
+            gui.add(params, 'gain', 0, 5).onChange((value)=>{
                 if(params.play){
+                    //sonify()
                     oscUpdate()
                     play()
                 }
             });
+            gui.add(params, 'tempo', 0, 100).step(0.1).onChange((value)=>{
+                if(params.play){
+                    clearInterval(timer);
+                    play()
+                }
+            });
+            gui.add(params, 'type', ['sine', 'square', 'sawtooth', 'square']).onChange((value)=>{
+                if(params.play){
+                    //sonify()
+                    //clearInterval(timer);
+                    oscInit()
+                    oscUpdate()
+                    play()
+                }
+            });
+            gui.add(params, 'channel', ['all', '1', '2', '3', '4','5']).onChange((value)=>{
+                if(params.play){
+                    //sonify()
+                    clearInterval(timer);
+                    oscUpdate()
+                    play()
+                }
+            });
+
+            
+            
+
             gui.add(params, 'play').onChange(function(value){
+
                 if(value){
                     oscInit()
                     oscUpdate()
@@ -91,49 +127,120 @@
                 }
             });
 
-            
-
             function oscInit(){
-                //var reverb = new Tone.Reverb(3.8).toMaster();
-                params.oscs = []
-                for(let i=0 ; i<16; i++){
-                    params.oscs.push(new Tone.Oscillator(440, "triangle10").toMaster());
-                }
                 
+                //params.oscs = []
+                base_osc = []
+
+                for(let i=1; i<=16; i++){
+                    base_osc.push(100*i);
+                }
+
+                console.log("base :", base_osc);
+
+                synth = new Tone.PolySynth(16, Tone.Synth, {
+                    oscillator : {
+                        type : params.type
+                    },
+                    envelope : {
+                        decay : 1,
+                        release : 1
+                    }
+                }).chain(Tone.Master);
+           
             }
 
             function oscUpdate(){
-                params.oscs.forEach((o,i)=>{
-                    let eeg = Math.round(params.eeg[1][i]);
-                    //o.freq = params.freq + params.gain * params.eeg[i]; //why it is not working?
-                    o.frequency.rampTo(params.freq + params.gain + eeg, 0.001);
-                    o.volume.value = params.volume;
-                    
 
+                //let noteName = String.fromCharCode(65 + )
+                //synth.triggerAttackRelease(['E5', 'C5', 'A5'],'4t');
 
-                    //console.log("eeg:", params.eeg[i]);
-                    //console.log("eeg.gain:", params.gain);
-                    //console.log("param.freq : ", params.freq);
-                })
+                clearInterval(timer);
+                for(let j=0; j<params.eeg[1].length; j++){
+
+                    for(let i=0; i<16; i++){
+
+                        let eeg = Math.round(params.eeg[i][j]);
+                        //if (eeg < 0) eeg = -eeg;
+
+                        note = base_osc[i] + params.freq + params.gain * eeg;  
+                        notes[j].push(note);
+
+                        synth.volume.value = params.volume;
+                        //console.log("note:", note);
+
+                        //o.Transport.bpm.value = params.tempo;
+                        //Tone.Transport.bpm.rampTo(params.tempo,10);
+                    }
+                }
+                
+                //myLoop();
+                
+                
             }
             
-            
+
+            /*
+
+            function myLoop(){
+                setTimeout(function(){
+                    synth.triggerAttackRelease(notes[i], 0.1);
+                    console.log("notes:", notes[i]);
+                    i++;
+                    myLoop();
+                }, 100)
+    
+            }
+            */
+
+
+
             function play(){
-                params.oscs.forEach((o,i)=>{
-                    o.start()
-                })
+                if (params.channel == 'all') {
+                    sonify_all()    
+                }
+                else {
+                    sonify_channel()
+                }
+  
+            }
+
+            function sonify_all(){
+                let i = 0; 
+                timer = setInterval(function(){
+                    synth.triggerAttackRelease(notes[i], 1);
+                    console.log("notes:", notes[i]);
+                    console.log("tempo:", params.tempo);
+                    i++;
+                },10 * params.tempo);
+            }
+
+
+            function sonify_channel(){
+                let i = 0; 
+                timer = setInterval(function(){
+                    synth.triggerAttackRelease(notes[i][params.channel], 1);
+                    console.log("notes:", notes[i][params.channel]);
+                    console.log("tempo:", params.tempo);
+                    i++;
+                }, 10 * params.tempo);
             }
             
 
             function stop(){
+                //cancelAnimationFrame(sonify);
+                /*
                 params.oscs.forEach((o,i)=>{
                     o.dispose();
                 })
+                */
+                clearInterval(timer);
+                synth.dispose();
             }
+
+            
     
         </script>
     </div>
-</div> <!-- /container -->
+</div> <!— /container —>
 {% endblock %}
-
-
